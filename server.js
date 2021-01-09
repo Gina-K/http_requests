@@ -3,9 +3,6 @@ const hostname = '127.0.0.1';
 const port = 8080;
 
 const requestHandler = (request, response) => {
-    for (const header in request.headers) {
-        console.log(`${header}: ${request.headers[header]}`);
-    }
     console.log(`Request to: ${request.url}`);
     console.log(`Method: ${request.method}`);
 
