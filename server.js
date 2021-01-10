@@ -20,6 +20,15 @@ if (fs.existsSync(dbName)) {
     console.log('>>> names read from file:', users);
 }
 
+const checkAuthorisation = request => {
+    const key = 'IKnowYourSecret';
+    const value = 'TheOwlsAreNotWhatTheySeem';
+
+    if (request.method === "POST") {
+        return true
+    }
+}
+
 const requestHandler = (request, response) => {
     const queryObject = url.parse(request.url, true).query;
 
@@ -29,16 +38,18 @@ const requestHandler = (request, response) => {
     response.statusCode = 200;
     response.setHeader('Content-Type', 'text/plain');
 
-    if (queryObject.name) {
-        let name = queryObject.name;
-        let ip = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
-        let user = new User(name, ip);
-        users.push(user);
-        fs.writeFile(dbName, JSON.stringify(users), (err) => {
-            if (err) {
-                throw err;
-            }
-        });
+    if (checkAuthorisation(request)) {
+        if (queryObject.name) {
+            let name = queryObject.name;
+            let ip = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
+            let user = new User(name, ip);
+            users.push(user);
+            fs.writeFile(dbName, JSON.stringify(users), (err) => {
+                if (err) {
+                    throw err;
+                }
+            });
+        }
     }
 
     response.end(users.length ? `Hello, ${users.join(', ')}` : 'Hi there!\n');
