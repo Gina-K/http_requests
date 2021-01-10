@@ -15,23 +15,19 @@ const checkAuthorisation = request => {
     const key = 'IKnowYourSecret';
     const value = 'TheOwlsAreNotWhatTheySeem';
 
-    if (request.method === "POST" && request.headers[key.toLowerCase()] === value) {
-        return true;
-    } else {
-        return false;
-    }
+    return request.method === "POST" && request.headers[key.toLowerCase()] === value;
 }
 
 const requestHandler = (request, response) => {
-    const queryObject = url.parse(request.url, true).query;
-
     console.log(`Request to: ${request.url}`);
     console.log(`Method: ${request.method}`);
 
     response.statusCode = 200;
     response.setHeader('Content-Type', 'text/plain');
 
-    if (checkAuthorisation(request)) {
+    if (request.method === 'GET') {
+        response.end('Hi there!\n');
+    } else if (checkAuthorisation(request)) {
         let data = '';
         request.on('data', chunk => {
             data += chunk;
