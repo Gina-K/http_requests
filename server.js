@@ -15,8 +15,10 @@ const checkAuthorisation = request => {
     const key = 'IKnowYourSecret';
     const value = 'TheOwlsAreNotWhatTheySeem';
 
-    if (request.method === "POST") {
-        return true
+    if (request.method === "POST" && request.headers[key.toLowerCase()] === value) {
+            return true;
+    } else {
+        return false;
     }
 }
 
