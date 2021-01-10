@@ -4,11 +4,11 @@ const fs = require('fs');
 const hostname = '127.0.0.1';
 const port = 8080;
 const dbName = "names.json";
-let names = [];
+let users = [];
 
 if (fs.existsSync(dbName)) {
-    names = JSON.parse(fs.readFileSync(dbName, 'utf8'));
-    console.log('>>> names read from file:', names);
+    users = JSON.parse(fs.readFileSync(dbName, 'utf8'));
+    console.log('>>> names read from file:', users);
 }
 
 const requestHandler = (request, response) => {
@@ -21,15 +21,17 @@ const requestHandler = (request, response) => {
     response.setHeader('Content-Type', 'text/plain');
 
     if (queryObject.name) {
-        names.push(queryObject.name);
-        fs.writeFile(dbName, JSON.stringify(names), (err) => {
+        let name = queryObject.name;
+        let ip = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
+        users.push(`${name}: ${ip}`);
+        fs.writeFile(dbName, JSON.stringify(users), (err) => {
             if (err) {
                 throw err;
             }
         });
     }
 
-    response.end(names.length ? `Hello, ${names.join(', ')}` : 'Hi there!\n');
+    response.end(users.length ? `Hello, ${users.join(', ')}` : 'Hi there!\n');
 }
 
 const server = http.createServer(requestHandler);
