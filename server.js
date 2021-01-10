@@ -6,6 +6,15 @@ const port = 8080;
 const dbName = "names.json";
 let users = [];
 
+function User(name, ip) {
+    this.name = name;
+    this.ip = ip;
+}
+
+User.prototype.toString = function userToString() {
+    return `${this.name} from ${this.ip}`
+}
+
 if (fs.existsSync(dbName)) {
     users = JSON.parse(fs.readFileSync(dbName, 'utf8'));
     console.log('>>> names read from file:', users);
@@ -23,7 +32,8 @@ const requestHandler = (request, response) => {
     if (queryObject.name) {
         let name = queryObject.name;
         let ip = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
-        users.push(`${name}: ${ip}`);
+        let user = new User(name, ip);
+        users.push(user);
         fs.writeFile(dbName, JSON.stringify(users), (err) => {
             if (err) {
                 throw err;
