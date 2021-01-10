@@ -16,7 +16,7 @@ const checkAuthorisation = request => {
     const value = 'TheOwlsAreNotWhatTheySeem';
 
     if (request.method === "POST" && request.headers[key.toLowerCase()] === value) {
-            return true;
+        return true;
     } else {
         return false;
     }
@@ -32,19 +32,27 @@ const requestHandler = (request, response) => {
     response.setHeader('Content-Type', 'text/plain');
 
     if (checkAuthorisation(request)) {
-        if (queryObject.name) {
-            let name = queryObject.name;
-            let ip = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
-            users.push({name: name, ip: ip});
-            fs.writeFile(dbName, JSON.stringify(users), (err) => {
-                if (err) {
-                    throw err;
-                }
-            });
-        }
+        let data = '';
+        request.on('data', chunk => {
+            data += chunk;
+        })
+        request.on('end', () => {
+            data = JSON.parse(data);
+
+            if (data.name) {
+                let name = data.name;
+                let ip = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
+                users.push({name: name, ip: ip});
+                fs.writeFile(dbName, JSON.stringify(users), (err) => {
+                    if (err) {
+                        throw err;
+                    }
+                });
+            }
+            response.end(users.length ? `Hello, ${users.map(user => `${user.name} from ${user.ip}`).join(', ')}` : 'Hi there!\n');
+        });
     }
 
-    response.end(users.length ? `Hello, ${users.map(user => `${user.name} from ${user.ip}`).join(', ')}` : 'Hi there!\n');
 }
 
 const server = http.createServer(requestHandler);
