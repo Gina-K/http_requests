@@ -9,6 +9,6 @@ Modify the server created on step 1:
 2. Write all successfully authorised users (name and IP) to the file
 3. For each new start of the server read the previous state from the file
 
-#3. Express
-###Task:
+# 3. Express
+### Task:
 Rewrite the server using Express framework.
