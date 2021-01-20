@@ -12,3 +12,7 @@ Modify the server created on step 1:
 # 3. Express
 ### Task:
 Rewrite the server using Express framework.
+
+# 4. Docker & MongoDB
+### Task:
+Run MongoDB as a Docker container. Rewrite existing names' storage with Mongo + Mongoose.
