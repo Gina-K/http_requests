@@ -1,20 +1,14 @@
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
 
-const fs = require('fs');
 const hostname = '127.0.0.1';
 const port = 8080;
-const dbName = "names.json";
-let users = [];
 
-const readNamesFromFile = (req, res, next) => {
-    if (fs.existsSync(dbName)) {
-        users = JSON.parse(fs.readFileSync(dbName, 'utf8'));
-        console.log('>>> names read from file:', users);
-    }
-    next();
-}
+mongoose.connect('mongodb://localhost:27017');
+const UserSchema = mongoose.Schema({name: String, ip: String});
+const User = mongoose.model('Users', UserSchema);
 
 const printReqProperties = (req, res, next) => {
     console.log(`Request to: ${req.url}`);
@@ -45,14 +39,16 @@ const postAuthorizedHandler = (req, res) => {
         let name = req.body.name;
         let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 
-        users.push({name: name, ip: ip});
-        fs.writeFile(dbName, JSON.stringify(users), (err) => {
-            if (err) {
-                throw err;
+        const user = new User({name: name, ip: ip});
+        user.save((error, savedUser) => {
+            if (error) {
+                throw error;
             }
+            res.send(`Hello, ${savedUser.name}. I figured out your IP: ${savedUser.ip}!`);
         });
+    } else {
+        res.send('Well, hello, stranger.')
     }
-    res.send(users.length ? `Hello, ${users.map(user => `${user.name} from ${user.ip}`).join(', ')}` : 'Hi there!\n');
 }
 
 const errorHandling = (err, req, res, next) => {
@@ -60,7 +56,6 @@ const errorHandling = (err, req, res, next) => {
     res.status(418).send('Something broke and now I\'m a teapot');
 }
 
-app.use(readNamesFromFile);
 app.use(printReqProperties);
 
 app.get('/', getHandler);
@@ -72,5 +67,11 @@ app.use(postAuthorizedHandler);
 app.use(errorHandling);
 
 app.listen(port, hostname, () => {
-    console.log(`Server running at http://${hostname}:${port}!`);
+    console.log(`Server running on http://${hostname}:${port}!`);
+    User.find({}, (err, users) => {
+        console.log(
+            'In the collection at the moment: ',
+            users.map(u => u.name).join(", ")
+        );
+    })
 });
