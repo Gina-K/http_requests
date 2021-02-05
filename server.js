@@ -12,6 +12,20 @@ mongoose.connect('mongodb://localhost:27017');
 const UserSchema = mongoose.Schema({name: String, ip: String});
 const User = mongoose.model('Users', UserSchema);
 
+const localStrategy = new LocalStrategy(
+{ usernameField: "username", passwordField: "pwd"},
+    (username, password, done) => {
+    done(null, { name: "pavel" });
+    }
+);
+
+passport.serializeUser((user, done) => {
+    done(null, user);
+});
+passport.deserializeUser((user, done) => {
+    done(null, user);
+})
+
 const printReqProperties = (req, res, next) => {
     console.log(`Request to: ${req.url}`);
     console.log(`Method: ${req.method}`);
@@ -69,6 +83,14 @@ app.get('/', getHandler);
 
 app.post('/', checkAuthorisation);
 app.use(bodyParser.json());
+passport.use("local", localStrategy);
+app.use(passport.initialize());
+
+app.post("/token", passport.authenticate("local", {
+    successRedirect: "/success",
+    failureRedirect: "/failure"
+}));
+
 app.use(postAuthorizedHandler);
 
 app.use(errorHandling);
