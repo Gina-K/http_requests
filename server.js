@@ -2,6 +2,8 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const passport = require('passport');
+const LocalStrategy = require('passport-local');
 
 const hostname = '127.0.0.1';
 const port = 8080;
@@ -39,13 +41,18 @@ const postAuthorizedHandler = (req, res) => {
         let name = req.body.name;
         let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 
-        const user = new User({name: name, ip: ip});
-        user.save((error, savedUser) => {
-            if (error) {
-                throw error;
-            }
-            res.send(`Hello, ${savedUser.name}. I figured out your IP: ${savedUser.ip}!`);
-        });
+        User.find({name: name, ip: ip})
+            .exec()
+            .then(foundUser => {
+                if (!foundUser || !foundUser.length) {
+                    const user = new User({name: name, ip: ip});
+                    user.save((error, savedUser) => {
+                        res.send(`Hello, ${savedUser.name}. I figured out your IP: ${savedUser.ip}!`);
+                    });
+                } else {
+                    res.send(`Hello, ${foundUser[0].name}!`);
+                }
+            });
     } else {
         res.send('Well, hello, stranger.')
     }
