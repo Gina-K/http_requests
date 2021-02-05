@@ -16,3 +16,11 @@ Rewrite the server using Express framework.
 # 4. Docker & MongoDB
 ### Task:
 Run MongoDB as a Docker container. Rewrite existing names' storage with Mongo + Mongoose.
+
+# 5. Passport.js LocalStrategy, BearerStrategy
+### Tasks:
+1. Apply passport.js LocalStrategy for user authentication by login and password.
+
+2. In case of success authentication create a JWT for authenticated user and store it among other fields of the user.
+
+3. Apply passport.js BearerStrategy to any API endpoint in order to validate JWT.
