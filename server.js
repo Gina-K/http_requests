@@ -57,19 +57,6 @@ const getHandler = (req, res) => {
     res.send('Hi there!\n');
 }
 
-let checkAuthorisation = (req, res, next) => {
-    const key = 'IKnowYourSecret';
-    const value = 'TheOwlsAreNotWhatTheySeem';
-    let isAuthorized = req.headers[key.toLowerCase()] === value;
-
-    if (isAuthorized === true) {
-        next();
-    } else {
-        res.status(401).set('Content-Type', 'text/plain');
-        res.send('Please authorise with correct custom header. \n');
-    }
-}
-
 const postAuthorizedHandler = (req, res) => {
     if (req.body.name) {
         let name = req.body.name;
@@ -101,7 +88,6 @@ app.use(printReqProperties);
 
 app.get('/', getHandler);
 
-app.post('/', checkAuthorisation);
 app.use(bodyParser.json());
 passport.use("local", localStrategy);
 passport.use("bearer", bearerStrategy);
