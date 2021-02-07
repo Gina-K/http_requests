@@ -64,14 +64,14 @@ const postAuthorizedHandler = (req, res) => {
 
         User.find({name: name, ip: ip})
             .exec()
-            .then(foundUser => {
-                if (!foundUser || !foundUser.length) {
+            .then(foundUsers => {
+                if (!foundUsers || !foundUsers.length) {
                     const user = new User({name: name, ip: ip});
                     user.save((error, savedUser) => {
                         res.send(`Hello, ${savedUser.name}. I figured out your IP: ${savedUser.ip}!`);
                     });
                 } else {
-                    res.send(`Hello, ${foundUser[0].name}!`);
+                    res.send(`Hello, ${foundUsers[0].name}!`);
                 }
             });
     } else {
@@ -85,10 +85,9 @@ const errorHandling = (err, req, res, next) => {
 }
 
 app.use(printReqProperties);
-
 app.get('/', getHandler);
-
 app.use(bodyParser.json());
+
 passport.use("local", localStrategy);
 passport.use("bearer", bearerStrategy);
 app.use(passport.initialize());
