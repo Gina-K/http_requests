@@ -10,19 +10,21 @@ const hostname = '127.0.0.1';
 const port = 8080;
 
 mongoose.connect('mongodb://localhost:27017');
-const UserSchema = mongoose.Schema({name: String, ip: String, jwt: String});
+const UserSchema = mongoose.Schema({name: String, password: String, ip: String, jwt: String});
 const User = mongoose.model('Users', UserSchema);
 
 const localStrategy = new LocalStrategy(
     {usernameField: "username", passwordField: "pwd"},
     (username, password, done) => {
-        User.find({name: username})
+        User.findOne({name: username})
             .exec()
-            .then(foundUsers => {
-                if (!foundUsers || !foundUsers.length) {
-                    done("Not found");
+            .then(foundUser => {
+                if (!foundUser) {
+                    done("The user not found");
+                } else if(foundUser.password !== password) {
+                    done("Incorrect password. Access denied.")
                 } else {
-                    done(null, foundUsers[0]);
+                    done(null, foundUser);
                 }
             });
     }
@@ -33,7 +35,7 @@ const bearerStrategy = new BearerStrategy((token, done) => {
 });
 
 passport.serializeUser((user, done) => {
-    const jwt = "sfdlkjljsdffgf";
+    const jwt = "qwjeoieqjwwe.weoriwpeori.sdoifpodsf";
     User.updateOne(
         {name: user.name},
         {jwt},
@@ -58,15 +60,16 @@ const getHandler = (req, res) => {
 }
 
 const postAuthorizedHandler = (req, res) => {
-    if (req.body.name) {
-        let name = req.body.name;
+    if (req.body.username) {
+        let name = req.body.username;
         let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+        let password = req.body.pwd;
 
-        User.find({name: name, ip: ip})
+        User.find({name: name})
             .exec()
             .then(foundUsers => {
                 if (!foundUsers || !foundUsers.length) {
-                    const user = new User({name: name, ip: ip});
+                    const user = new User({name: name, password: password, ip: ip});
                     user.save((error, savedUser) => {
                         res.send(`Hello, ${savedUser.name}. I figured out your IP: ${savedUser.ip}!`);
                     });
@@ -92,21 +95,24 @@ passport.use("local", localStrategy);
 passport.use("bearer", bearerStrategy);
 app.use(passport.initialize());
 
+// app.post("/token", passport.authenticate("local"), () => console.log ('local strategy works'))
+
 app.post("/token", passport.authenticate("local", {
     successRedirect: "/success",
     failureRedirect: "/failure"
 }));
 
-app.use(passport.authenticate("bearer", {session: false}), postAuthorizedHandler);
+app.use(postAuthorizedHandler);
+// app.use(passport.authenticate("bearer", {session: false}), postAuthorizedHandler);
 
-app.use(errorHandling);
+// app.use(errorHandling);
 
 app.listen(port, hostname, () => {
     console.log(`Server running on http://${hostname}:${port}!`);
     User.find({}, (err, users) => {
         console.log(
             'In the collection at the moment: ',
-            users.map(u => u.name + " " + u.jwt).join(", ")
+            users.map(u => u.name + " " + u.jwt + " " + u.password).join(",\n")
         );
     })
 });
