@@ -64,7 +64,7 @@ const getHandler = (req, res) => {
     res.send('Hi there!\n');
 }
 
-const postAuthorizedHandler = (req, res) => {
+const authorizedHandler = (req, res) => {
     if (req.body.username) {
         let name = req.body.username;
         let password = req.body.pwd;
@@ -82,11 +82,11 @@ const postAuthorizedHandler = (req, res) => {
                 }
             });
     } else {
-        res.send('Well, hello, stranger.')
+        res.send('Hello there!')
     }
 }
 
-const errorHandling = (err, req, res, next) => {
+const errorHandler = (err, req, res, next) => {
     console.log(err.stack);
     res.status(418).send('Something broke and now I\'m a teapot');
 }
@@ -106,17 +106,16 @@ app.post("/token", passport.authenticate("local", {
     failureRedirect: "/failure"
 }));
 
-app.use(postAuthorizedHandler);
-// app.use(passport.authenticate("bearer", {session: false}), postAuthorizedHandler);
+app.use(authorizedHandler);
 
-// app.use(errorHandling);
+// app.use(errorHandler);
 
 app.listen(port, hostname, () => {
     console.log(`Server running on http://${hostname}:${port}!`);
     User.find({}, (err, users) => {
         console.log(
             'In the collection at the moment: ',
-            users.map(u => u.name + " " + u.jwt + " " + u.password).join(",\n")
+            users.map(u => u.name + " " + u.jwt).join(",\n")
         );
     })
 });
