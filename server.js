@@ -9,8 +9,10 @@ const BearerStrategy = require('passport-http-bearer');
 const hostname = '127.0.0.1';
 const port = 8080;
 
+const jwt = "qwjeoieqjwwe.weoriwpeori.sdoifpodsf";
+
 mongoose.connect('mongodb://localhost:27017');
-const UserSchema = mongoose.Schema({name: String, password: String, ip: String, jwt: String});
+const UserSchema = mongoose.Schema({name: String, password: String, jwt: String});
 const User = mongoose.model('Users', UserSchema);
 
 const localStrategy = new LocalStrategy(
@@ -31,11 +33,14 @@ const localStrategy = new LocalStrategy(
 );
 
 const bearerStrategy = new BearerStrategy((token, done) => {
-    done(null, "pavel");
+    if (token === jwt) {
+        done(null, true);
+    } else {
+        done("Access denied.");
+    }
 });
 
 passport.serializeUser((user, done) => {
-    const jwt = "qwjeoieqjwwe.weoriwpeori.sdoifpodsf";
     User.updateOne(
         {name: user.name},
         {jwt},
@@ -62,19 +67,18 @@ const getHandler = (req, res) => {
 const postAuthorizedHandler = (req, res) => {
     if (req.body.username) {
         let name = req.body.username;
-        let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
         let password = req.body.pwd;
 
         User.find({name: name})
             .exec()
             .then(foundUsers => {
                 if (!foundUsers || !foundUsers.length) {
-                    const user = new User({name: name, password: password, ip: ip});
+                    const user = new User({name: name, password: password});
                     user.save((error, savedUser) => {
-                        res.send(`Hello, ${savedUser.name}. I figured out your IP: ${savedUser.ip}!`);
+                        res.send(`Hello, ${savedUser.name}.`);
                     });
                 } else {
-                    res.send(`Hello, ${foundUsers[0].name}!`);
+                    res.send(`Hello, ${foundUsers[0].name}. Welcome back!`);
                 }
             });
     } else {
@@ -87,6 +91,8 @@ const errorHandling = (err, req, res, next) => {
     res.status(418).send('Something broke and now I\'m a teapot');
 }
 
+app.use(passport.authenticate("bearer", {session: false}));
+
 app.use(printReqProperties);
 app.get('/', getHandler);
 app.use(bodyParser.json());
@@ -94,8 +100,6 @@ app.use(bodyParser.json());
 passport.use("local", localStrategy);
 passport.use("bearer", bearerStrategy);
 app.use(passport.initialize());
-
-// app.post("/token", passport.authenticate("local"), () => console.log ('local strategy works'))
 
 app.post("/token", passport.authenticate("local", {
     successRedirect: "/success",
