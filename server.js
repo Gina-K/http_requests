@@ -8,12 +8,9 @@ const port = 8080;
 const dbName = "names.json";
 let users = [];
 
-const readNamesFromFile = (req, res, next) => {
-    if (fs.existsSync(dbName)) {
-        users = JSON.parse(fs.readFileSync(dbName, 'utf8'));
-        console.log('>>> names read from file:', users);
-    }
-    next();
+if (fs.existsSync(dbName)) {
+    users = JSON.parse(fs.readFileSync(dbName, 'utf8'));
+    console.log('>>> names read from file:', users);
 }
 
 const printReqProperties = (req, res, next) => {
@@ -60,7 +57,6 @@ const errorHandling = (err, req, res, next) => {
     res.status(418).send('Something broke and now I\'m a teapot');
 }
 
-app.use(readNamesFromFile);
 app.use(printReqProperties);
 
 app.get('/', getHandler);
