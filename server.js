@@ -8,11 +8,6 @@ const port = 8080;
 const dbName = "names.json";
 let users = [];
 
-if (fs.existsSync(dbName)) {
-    users = JSON.parse(fs.readFileSync(dbName, 'utf8'));
-    console.log('>>> names read from file:', users);
-}
-
 const printReqProperties = (req, res, next) => {
     console.log(`Request to: ${req.url}`);
     console.log(`Method: ${req.method}`);
@@ -69,4 +64,8 @@ app.use(errorHandling);
 
 app.listen(port, hostname, () => {
     console.log(`Server running at http://${hostname}:${port}!`);
+    if (fs.existsSync(dbName)) {
+        users = JSON.parse(fs.readFileSync(dbName, 'utf8'));
+        console.log('>>> names read from file:', users);
+    }
 });
